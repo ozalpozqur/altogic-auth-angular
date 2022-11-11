@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostBinding, OnInit } from '@angular/core';
 import { AuthService } from '../../shared/auth.service';
 import altogic from '../../libs/altogic';
 import { FormControl, Validators } from '@angular/forms';
@@ -13,8 +13,9 @@ export class UserInfoComponent implements OnInit {
 	changeMode = false;
 	loading = false;
 	name = new FormControl(this.getUserName(), [Validators.required]);
-	constructor(private authService: AuthService) {}
 
+	constructor(private authService: AuthService) {}
+	@HostBinding('class.w-full')
 	getUserName() {
 		return this.authService.user?.name;
 	}
