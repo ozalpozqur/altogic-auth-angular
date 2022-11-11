@@ -148,7 +148,7 @@ ng generate component components/sessions &&
 ng generate component components/user-info
 ```
 
-## Define our home page component
+### Define our home page component
 Open `home.component.html` and paste below code block:
 
 ```html
@@ -165,9 +165,9 @@ Open `home.component.html` and paste below code block:
 </div>
 ```
 
-## Define our login page component
+### Define our login page component
 
-Open `login.component.ts` and paste below code block to define our login page component.
+Open `login.component.ts` and paste below code block to define.
 
 In this component, we will use the `signInWithEmail` method of the *Altogic* client library to sign in the user.
 
@@ -240,9 +240,9 @@ then open your `login.component.html` and paste below code block:
 </section>
 ```
 
-## Define our login with magic link page component
+### Define our login with magic link page component
 
-Open `login-with-magic-link.component.ts` and paste below code block to define our register page component.
+Open `login-with-magic-link.component.ts` and paste below code block to define.
 
 In this component, we will use the `altogic.auth.sendMagicLinkEmail()` method of the **Altogic** client library to send the magic link to the user's email.
 
@@ -322,9 +322,9 @@ then open your `login-with-magic-link.component.html` and paste below code block
 </section>
 ```
 
-## Define our register page component
+### Define our register page component
 
-Open `register.component.ts` and paste below code block to define our register page component.
+Open `register.component.ts` and paste below code block to define.
 
 ```ts
 import { Component, OnInit } from '@angular/core';
@@ -411,6 +411,351 @@ then open your `register.component.html` and paste below code block:
   </form>
 </section>
 ```
+
+### Define our profile page component
+
+Open `profile.component.ts` and paste below code block to define.
+
+In this component, we will use `AuthService` to logout the current user.
+
+```ts
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from '../../shared/auth.service';
+
+@Component({
+  selector: 'app-profile',
+  templateUrl: './profile.component.html',
+})
+export class ProfileComponent implements OnInit {
+  loading = false;
+  constructor(private router: Router, private authService: AuthService) {}
+  ngOnInit(): void {}
+
+  async logout() {
+    this.loading = true;
+    await this.authService.logout();
+    this.loading = false;
+    await this.router.navigate(['/login']);
+  }
+}
+```
+
+then open your `profile.component.html` and paste below code block:
+  
+```angular2html
+<section class="h-screen py-4 space-y-4 flex flex-col text-center items-center">
+  <app-avatar></app-avatar>
+  <app-user-info></app-user-info>
+  <app-sessions></app-sessions>
+  <button (click)="logout()" class="bg-gray-400 rounded py-2 px-3 text-white">
+    {{ loading ? 'Processing...' : 'Logout' }}
+  </button>
+</section>
+```
+
+### Define our auth-redirect page component
+
+Open `auth-redirect.component.ts` and paste below code block to define.
+
+In this page, we will use **Altogic's** `altogic.auth.getAuthGrant()` function to log in with the handled token from the URL.
+
+```ts
+import { Component, OnInit } from '@angular/core';
+import altogic from '../../libs/altogic';
+import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../../shared/auth.service';
+import { APIError } from 'altogic';
+
+@Component({
+  selector: 'app-auth-redirect',
+  templateUrl: './auth-redirect.component.html',
+})
+export class AuthRedirectComponent implements OnInit {
+  errors: APIError | null = null;
+  noToken = false;
+  constructor(private route: ActivatedRoute, private authService: AuthService, private router: Router) {}
+
+  ngOnInit(): void {
+    this.verifyUser();
+  }
+  async verifyUser() {
+    const token = this.route.snapshot.queryParamMap.get('access_token');
+
+    if (!token) {
+      this.noToken = true;
+      return;
+    }
+
+    const { user, session, errors } = await altogic.auth.getAuthGrant(token);
+
+    if (errors) {
+      this.errors = errors;
+      return;
+    }
+
+    this.authService.setUserAndSession(user, session);
+    await this.router.navigate(['profile']);
+  }
+}
+```
+
+then open your `auth-redirect.component.html` and paste below code block to define:
+  
+```angular2html
+<section class="h-screen flex flex-col gap-4 justify-center items-center">
+  <div *ngIf="noToken; else hasTokenBlock" class="text-center text-red-500 text-6xl">No token provided</div>
+  <ng-template #hasTokenBlock>
+    <ng-container *ngIf="errors; else waitBlock">
+      <div *ngFor="let error of errors.items" class="text-center text-red-500 text-3xl">
+        <p>{{ error.message }}</p>
+      </div>
+    </ng-container>
+    <ng-template #waitBlock>
+      <div class="text-center">
+        <p class="text-6xl">Please wait</p>
+        <p class="text-3xl">You're redirecting to your profile...</p>
+      </div>
+    </ng-template>
+  </ng-template>
+</section>
+```
+
+### Define our user-info component to show user's name and change it
+
+Open `user-info.component.ts` and paste below code block to define.
+
+In this component, we will use **Altogic's** database operations to update user's name.
+
+```ts
+import { Component, HostBinding, OnInit } from '@angular/core';
+import { AuthService } from '../../shared/auth.service';
+import altogic from '../../libs/altogic';
+import { FormControl, Validators } from '@angular/forms';
+import { User } from 'altogic';
+
+@Component({
+  selector: 'app-user-info',
+  templateUrl: './user-info.component.html',
+})
+export class UserInfoComponent implements OnInit {
+  errors: null | string = null;
+  changeMode = false;
+  loading = false;
+  name = new FormControl(this.getUserName(), [Validators.required]);
+
+  constructor(private authService: AuthService) {}
+  @HostBinding('class.w-full')
+  getUserName() {
+    return this.authService.user?.name;
+  }
+
+  async saveName() {
+    this.loading = true;
+    this.errors = null;
+
+    const { data, errors: apiErrors } = await altogic.db
+      .model('users')
+      .object(this.authService.user?._id)
+      .update({ name: this.name.value });
+
+    if (apiErrors) {
+      this.errors = apiErrors.items[0].message;
+    } else {
+      this.authService.setUser(data as User);
+    }
+
+    this.loading = false;
+    this.changeMode = false;
+  }
+  ngOnInit(): void {}
+}
+```
+
+then open your `user-info.component.html` and paste below code block:
+
+```angular2html
+<section class="border p-4">
+  <div class="flex items-center justify-center" *ngIf="changeMode">
+    <input
+      (keydown.enter)="saveName()"
+      autofocus
+      [formControl]="name"
+      type="text"
+      class="border-none text-3xl text-center"
+    />
+  </div>
+  <div class="space-y-4" *ngIf="!changeMode">
+    <h1 class="text-3xl">Hello, {{ getUserName() }}</h1>
+    <button (click)="changeMode = true" class="border p-2">Change name</button>
+  </div>
+  <div *ngIf="errors">
+    {{ errors }}
+  </div>
+</section>
+```
+
+### Define our avatar component to show user's avatar and change it
+
+Open `avatar.component.ts` and paste below code block to define:
+
+For convenience, we will be using the user's name as the name of the uploaded file and upload the profile picture to the root directory of our app storage. If needed you can create different buckets for each user or a generic bucket to store all provided photos of users. The Altogic Client Library has all the methods to manage buckets and files.
+
+```ts
+import { Component, HostBinding, OnInit } from '@angular/core';
+import { AuthService } from '../../shared/auth.service';
+import altogic from '../../libs/altogic';
+import { FormControl, Validators } from '@angular/forms';
+import { User } from 'altogic';
+
+@Component({
+  selector: 'app-user-info',
+  templateUrl: './user-info.component.html',
+})
+export class UserInfoComponent implements OnInit {
+  errors: null | string = null;
+  changeMode = false;
+  loading = false;
+  name = new FormControl(this.getUserName(), [Validators.required]);
+
+  constructor(private authService: AuthService) {}
+  @HostBinding('class.w-full')
+  getUserName() {
+    return this.authService.user?.name;
+  }
+
+  async saveName() {
+    this.loading = true;
+    this.errors = null;
+
+    const { data, errors: apiErrors } = await altogic.db
+      .model('users')
+      .object(this.authService.user?._id)
+      .update({ name: this.name.value });
+
+    if (apiErrors) {
+      this.errors = apiErrors.items[0].message;
+    } else {
+      this.authService.setUser(data as User);
+    }
+
+    this.loading = false;
+    this.changeMode = false;
+  }
+  ngOnInit(): void {}
+}
+```
+
+then open your `avatar.component.html` and paste below code block:
+
+```angular2html
+<div>
+  <figure class="flex flex-col gap-4 items-center justify-center py-2">
+    <picture class="border rounded-full w-24 h-24 overflow-hidden">
+      <img class="object-cover w-full h-full" [src]="getUserPhoto()" [alt]="getUserName()" />
+    </picture>
+  </figure>
+  <div class="flex flex-col gap-4 justify-center items-center">
+    <label class="border p-2 cursor-pointer">
+      <span>{{ loading ? 'Uploading...' : 'Change Avatar' }}</span>
+      <input (change)="onFileChange($event)" [disabled]="loading" class="hidden" type="file" accept="image/*" />
+    </label>
+    <div class="bg-red-500 p-2 text-white" *ngIf="errors">{{ errors }}</div>
+  </div>
+</div>
+```
+
+### Define our sessions component to show user's sessions and logout from them
+
+Open `sessions.component.ts` and paste below code block to define:
+
+In this component, we will use **Altogic's** `altogic.auth.getAllSessions()` to get the user's all sessions.
+
+```ts
+import { Component, OnInit } from '@angular/core';
+import { APIError, Session } from 'altogic';
+import { AuthService } from '../../shared/auth.service';
+import altogic from '../../libs/altogic';
+
+interface SessionData extends Session {
+  isCurrent: boolean;
+}
+
+@Component({
+  selector: 'app-sessions',
+  templateUrl: './sessions.component.html',
+})
+export class SessionsComponent implements OnInit {
+  sessions: SessionData[] | null = null;
+  errors: APIError | null = null;
+  constructor(private authService: AuthService) {}
+
+  ngOnInit(): void {
+    this.getSessions();
+  }
+
+  async getSessions() {
+    const { sessions, errors } = await altogic.auth.getAllSessions();
+
+    if (errors) {
+      this.errors = errors;
+      return;
+    }
+
+    this.sessions = sessions?.map(session => {
+      return {
+        ...session,
+        isCurrent: session.token === this.authService.session?.token,
+        creationDtm: new Date(session.creationDtm).toLocaleDateString('en-US'),
+      };
+    }) as SessionData[];
+  }
+
+  async logoutSession(session: Session) {
+    const { errors } = await altogic.auth.signOut(session.token);
+    if (!errors) {
+      this.sessions = this.sessions?.filter(s => s.token !== session.token) as SessionData[];
+    }
+  }
+}
+```
+
+then open your `sessions.component.html` and paste below code block:
+  
+```angular2html
+<div class="border p-4 space-y-4">
+  <p class="text-3xl">All Sessions</p>
+  <ul class="flex flex-col gap-2">
+    <ng-container *ngIf="errors">
+      <div *ngFor="let error of errors.items" class="bg-red-600 text-white text-[13px] p-2">
+        <p>{{ error.message }}</p>
+      </div>
+    </ng-container>
+    <ng-container *ngIf="!errors">
+      <li class="flex justify-between gap-12" *ngFor="let session of sessions">
+        <div>
+          <span *ngIf="session?.isCurrent"> Current Session </span>
+          <span *ngIf="!session?.isCurrent">
+						<strong>Device name: </strong>{{ session?.userAgent?.device?.family }}</span
+          >
+        </div>
+        <div class="flex items-center gap-2">
+          <span>{{ session.creationDtm }}</span>
+          <button
+            *ngIf="!session?.isCurrent"
+            (click)="logoutSession(session)"
+            class="border grid place-items-center p-2 h-8 w-8 aspect-square leading-none"
+          >
+            X
+          </button>
+        </div>
+      </li>
+    </ng-container>
+  </ul>
+</div>
+```
+
+
 
 ## Generate an Auth service
 We will generate a service to handle the authentication process. Run the following command to generate a service:
