@@ -31,7 +31,7 @@ If email verification is disabled, then after step 2, Altogic immediately return
 To complete this tutorial, make sure you have installed the following tools and utilities on your local development environment.
 - [VsCode](https://code.visualstudio.com/download)
 - [NodeJS](https://nodejs.org/en/download/)
-- [Angular App](https://angular.io/start)
+- [Angular App](https://angular.io/guide/setup-local)
 - You also need an Altogic Account. If you do not have one, you can create an account by [signin up for Altogic](https://designer.altogic.com/).
 
 
@@ -67,3 +67,62 @@ Once the user created successfully, our Angular app will route the user to the V
 > If you want, you can deactivate or customize the mail verification from App Settings -> Authentication in Logic Designer.
 
 ![Mail Verification](github/15-mail.png) 
+
+## Install the Angular CLI
+You use the Angular CLI to create projects, generate application.
+
+To install the Angular CLI, open a terminal window and run the following command:
+
+```bash
+npm install -g @angular/cli
+```
+
+## Create a new Angular app
+To create a new Angular app, open a terminal window and run the following command:
+
+```bash
+ng new altogic-auth-angular
+```
+I showed you which options to choose in the image I will give you below. You can choose the same options as I did.
+![Mail Verification](github/terminal.png) 
+
+### Navigate to folder and run the app 
+```bash
+cd altogic-auth-angular && ng serve --open
+```
+
+## Integrating with Altogic
+
+Our backend and frontend is now ready and running on the server. ✨
+
+Now, we can install the Altogic client library to our React app to connect our frontend with the backend.
+
+```bash
+# using npm
+npm install altogic
+# OR is using yarn
+yarn add altogic
+```
+
+Let’s create a `libs/` folder inside the `src/app` directory to add **altogic.ts** file.
+
+Open **altogic.ts** and paste below code block to export the altogic client instance.
+
+```ts
+// src/app/libs/altogic.ts
+import { createClient } from 'altogic';
+
+const ENV_URL = ''; // replace with your envUrl
+const CLIENT_KEY = ''; // replace with your clientKey
+const API_KEY = ''; // replace with your apiKey
+
+const altogic = createClient(ENV_URL, CLIENT_KEY, {
+	apiKey: API_KEY,
+	signInRedirect: '/login',
+});
+
+export default altogic;
+```
+> Replace ENV_URL, CLIENT_KEY and API_KEY which is shown in the **Home** view of [Altogic Designer](https://designer.altogic.com/).
+
+
