@@ -215,7 +215,7 @@ export class LoginComponent implements OnInit {
 ```
 
 then open your `login.component.html` and paste below code block:
-```angular2html
+```html
 <section class="flex flex-col items-center justify-center h-96 gap-4">
   <form (ngSubmit)="submitHandler()" [formGroup]="loginForm" class="flex flex-col gap-2 w-full md:w-96">
     <h1 class="self-start text-3xl font-bold">Login to your account</h1>
@@ -292,7 +292,7 @@ export class LoginWithMagicLinkComponent implements OnInit {
 
 then open your `login-with-magic-link.component.html` and paste below code block:
 
-```angular2html
+```html
 <section class="flex flex-col items-center justify-center h-96 gap-4">
   <form (ngSubmit)="submitHandler()" [formGroup]="magicForm" class="flex flex-col gap-2 w-full md:w-96">
     <h1 class="self-start text-3xl font-bold">Login with magic link</h1>
@@ -380,7 +380,7 @@ export class RegisterComponent implements OnInit {
 
 then open your `register.component.html` and paste below code block:
 
-```angular2html
+```html
 <section class="flex flex-col items-center justify-center h-96 gap-4">
   <form (ngSubmit)="submitHandler()" [formGroup]="registerForm" class="flex flex-col gap-2 w-full md:w-96">
     <h1 class="self-start text-3xl font-bold">Create an account</h1>
@@ -443,7 +443,7 @@ export class ProfileComponent implements OnInit {
 
 then open your `profile.component.html` and paste below code block:
   
-```angular2html
+```html
 <section class="h-screen py-4 space-y-4 flex flex-col text-center items-center">
   <app-avatar></app-avatar>
   <app-user-info></app-user-info>
@@ -502,7 +502,7 @@ export class AuthRedirectComponent implements OnInit {
 
 then open your `auth-redirect.component.html` and paste below code block to define:
   
-```angular2html
+```html
 <section class="h-screen flex flex-col gap-4 justify-center items-center">
   <div *ngIf="noToken; else hasTokenBlock" class="text-center text-red-500 text-6xl">No token provided</div>
   <ng-template #hasTokenBlock>
@@ -574,7 +574,7 @@ export class UserInfoComponent implements OnInit {
 
 then open your `user-info.component.html` and paste below code block:
 
-```angular2html
+```html
 <section class="border p-4">
   <div class="flex items-center justify-center" *ngIf="changeMode">
     <input
@@ -648,7 +648,7 @@ export class UserInfoComponent implements OnInit {
 
 then open your `avatar.component.html` and paste below code block:
 
-```angular2html
+```html
 <div>
   <figure class="flex flex-col gap-4 items-center justify-center py-2">
     <picture class="border rounded-full w-24 h-24 overflow-hidden">
@@ -722,7 +722,7 @@ export class SessionsComponent implements OnInit {
 
 then open your `sessions.component.html` and paste below code block:
   
-```angular2html
+```html
 <div class="border p-4 space-y-4">
   <p class="text-3xl">All Sessions</p>
   <ul class="flex flex-col gap-2">
