@@ -758,7 +758,9 @@ then open your `sessions.component.html` and paste below code block:
 
 
 ## Generate an Auth service
-We will generate a service to handle the authentication process. Run the following command to generate a service:
+We will generate a service to handle the authentication process. 
+
+Run the following command to generate a service:
 ```bash
 ng generate service shared/auth
 ```
@@ -799,7 +801,9 @@ export class AuthService {
 ```
 
 ## Generate auth and guest guard
-We will generate some **guards** to protect our routes. Run the following command to generate a guards:
+We will generate some **guards** to protect our routes. 
+
+Run the following command to generate a guards:
 ```bash
 ng generate guard shared/auth && ng generate guard shared/guest
 ``` 
