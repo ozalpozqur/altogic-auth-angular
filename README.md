@@ -908,8 +908,7 @@ then open your `sessions.component.html` and paste below code block:
         <div>
           <span *ngIf="session?.isCurrent"> Current Session </span>
           <span *ngIf="!session?.isCurrent">
-            <strong>Device name: </strong>{{ session?.userAgent?.device?.family }}</span
-          >
+            <strong>Device name: </strong>{{ session?.userAgent?.device?.family }}</span>
         </div>
         <div class="flex items-center gap-2">
           <span>{{ session.creationDtm }}</span>
