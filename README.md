@@ -922,3 +922,11 @@ const routes: Routes = [
 })
 export class AppRoutingModule {}
 ```
+
+
+## Conclusion
+Congratulations!✨
+
+You had completed the most critical part of the Authentication flow, which includes private routes, sign-up, sign-in, and sign-out operations.
+
+If you have any questions about Altogic or want to share what you have built, please post a message in our [community forum](https://community.altogic.com/home) or [discord channel](https://discord.gg/zDTnDPBxRz).
