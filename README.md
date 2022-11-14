@@ -126,6 +126,178 @@ export default altogic;
 > Replace ENV_URL, CLIENT_KEY and API_KEY which is shown in the **Home** view of [Altogic Designer](https://designer.altogic.com/).
 
 
+
+## Generate an Auth service
+We will generate a service to handle the authentication process.
+
+Run the following command to generate a service:
+```bash
+ng generate service shared/auth
+```
+In the `auth.service.ts` file, we will add the following code block to handle the authentication process.
+
+```ts
+import { Injectable } from '@angular/core';
+import { Session, User } from 'altogic';
+import altogic from '../libs/altogic';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AuthService {
+  user: User | null = altogic.auth.getUser();
+  session: Session | null = altogic.auth.getSession();
+
+  async logout() {
+    await altogic.auth.signOut();
+    this.setUserAndSession(null, null);
+  }
+
+  setUserAndSession(user: User | null, session: Session | null) {
+    this.user = user;
+    this.session = session;
+
+    if (session && user) {
+      altogic.auth.setUser(user);
+      altogic.auth.setSession(session);
+    }
+  }
+
+  setUser(user: User | null) {
+    this.user = user;
+    if (user) altogic.auth.setUser(user);
+  }
+}
+```
+
+## Generate auth and guest guard
+We will generate some **guards** to protect our routes.
+
+Run the following command to generate a guards:
+```bash
+ng generate guard shared/auth && ng generate guard shared/guest
+``` 
+> then you should select the `CanActivate` option for each by pressing enter.
+
+## Define auth guard
+In this guard, we will check if the user is logged in or not. If the user is logged in, we will return true, otherwise, we will redirect the user to the login page.
+
+Replace the `auth.guard.ts` file with the following code block:
+```ts
+import { Injectable } from '@angular/core';
+import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
+import { Observable } from 'rxjs';
+import { AuthService } from './auth.service';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AuthGuard implements CanActivate {
+  constructor(private authService: AuthService, private router: Router) {}
+  canActivate(
+    route: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot
+  ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+    if (this.authService.user) return true;
+    this.router.navigate(['login']);
+    return false;
+  }
+}
+```
+
+## Define guest guard
+In this guard, we will check if the user is logged in or not. If the user is logged in, we will return false and redirect the user to the profile page, otherwise, we will return true.
+
+Replace the `guest.guard.ts` file with the following code block:
+
+```ts
+import { Injectable } from '@angular/core';
+import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
+import { Observable } from 'rxjs';
+import { AuthService } from './auth.service';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class GuestGuard implements CanActivate {
+  constructor(private authService: AuthService, private router: Router) {}
+  canActivate(
+    route: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot
+  ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+    if (this.authService.user) {
+      this.router.navigate(['profile']);
+      return false;
+    }
+    return true;
+  }
+}
+```
+
+## Define the routes
+Open `app-routing.module.ts` and paste below code block to define the routes.
+
+```ts
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { LoginComponent } from './pages/login/login.component';
+import { RegisterComponent } from './pages/register/register.component';
+import { HomeComponent } from './pages/home/home.component';
+import { LoginWithMagicLinkComponent } from './pages/login-with-magic-link/login-with-magic-link.component';
+import { ProfileComponent } from './pages/profile/profile.component';
+import { AuthGuard } from './shared/auth.guard';
+import { GuestGuard } from './shared/guest.guard';
+import { AuthRedirectComponent } from './pages/auth-redirect/auth-redirect.component';
+
+const routes: Routes = [
+  {
+    path: '',
+    component: HomeComponent,
+    canActivate: [GuestGuard],
+  },
+  {
+    path: 'profile',
+    component: ProfileComponent,
+    title: 'Profile Page',
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'login',
+    component: LoginComponent,
+    title: 'Login Page',
+    canActivate: [GuestGuard],
+  },
+  {
+    path: 'auth-redirect',
+    component: AuthRedirectComponent,
+    title: 'Auth Redirect Page',
+  },
+  {
+    path: 'login-with-magic-link',
+    component: LoginWithMagicLinkComponent,
+    title: 'Login with Magic Link Page',
+    canActivate: [GuestGuard],
+  },
+  {
+    path: 'register',
+    component: RegisterComponent,
+    title: 'Register Page',
+    canActivate: [GuestGuard],
+  },
+  {
+    path: '**',
+    redirectTo: '/',
+  },
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule],
+})
+export class AppRoutingModule {}
+```
+
+
 ## Let's generate our page components
 
 We will generate our page components using the Angular CLI. Open your terminal window and run the following command:
@@ -755,177 +927,6 @@ then open your `sessions.component.html` and paste below code block:
 </div>
 ```
 
-
-
-## Generate an Auth service
-We will generate a service to handle the authentication process. 
-
-Run the following command to generate a service:
-```bash
-ng generate service shared/auth
-```
-In the `auth.service.ts` file, we will add the following code block to handle the authentication process.
-
-```ts
-import { Injectable } from '@angular/core';
-import { Session, User } from 'altogic';
-import altogic from '../libs/altogic';
-
-@Injectable({
-  providedIn: 'root',
-})
-export class AuthService {
-  user: User | null = altogic.auth.getUser();
-  session: Session | null = altogic.auth.getSession();
-
-  async logout() {
-    await altogic.auth.signOut();
-    this.setUserAndSession(null, null);
-  }
-
-  setUserAndSession(user: User | null, session: Session | null) {
-    this.user = user;
-    this.session = session;
-
-    if (session && user) {
-      altogic.auth.setUser(user);
-      altogic.auth.setSession(session);
-    }
-  }
-
-  setUser(user: User | null) {
-    this.user = user;
-    if (user) altogic.auth.setUser(user);
-  }
-}
-```
-
-## Generate auth and guest guard
-We will generate some **guards** to protect our routes. 
-
-Run the following command to generate a guards:
-```bash
-ng generate guard shared/auth && ng generate guard shared/guest
-``` 
-> then you should select the `CanActivate` option for each by pressing enter.
-
-## Define auth guard 
-In this guard, we will check if the user is logged in or not. If the user is logged in, we will return true, otherwise, we will redirect the user to the login page.
-
-Replace the `auth.guard.ts` file with the following code block:
-```ts
-import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { Observable } from 'rxjs';
-import { AuthService } from './auth.service';
-
-@Injectable({
-  providedIn: 'root',
-})
-export class AuthGuard implements CanActivate {
-  constructor(private authService: AuthService, private router: Router) {}
-  canActivate(
-    route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
-  ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
-    if (this.authService.user) return true;
-    this.router.navigate(['login']);
-    return false;
-  }
-}
-```
-
-## Define guest guard
-In this guard, we will check if the user is logged in or not. If the user is logged in, we will return false and redirect the user to the profile page, otherwise, we will return true.
-
-Replace the `guest.guard.ts` file with the following code block:
-
-```ts
-import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { Observable } from 'rxjs';
-import { AuthService } from './auth.service';
-
-@Injectable({
-  providedIn: 'root',
-})
-export class GuestGuard implements CanActivate {
-  constructor(private authService: AuthService, private router: Router) {}
-  canActivate(
-    route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
-  ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
-    if (this.authService.user) {
-      this.router.navigate(['profile']);
-      return false;
-    }
-    return true;
-  }
-}
-```
-
-## Define the routes
-Open `app-routing.module.ts` and paste below code block to define the routes.
-
-```ts
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { LoginComponent } from './pages/login/login.component';
-import { RegisterComponent } from './pages/register/register.component';
-import { HomeComponent } from './pages/home/home.component';
-import { LoginWithMagicLinkComponent } from './pages/login-with-magic-link/login-with-magic-link.component';
-import { ProfileComponent } from './pages/profile/profile.component';
-import { AuthGuard } from './shared/auth.guard';
-import { GuestGuard } from './shared/guest.guard';
-import { AuthRedirectComponent } from './pages/auth-redirect/auth-redirect.component';
-
-const routes: Routes = [
-  {
-    path: '',
-    component: HomeComponent,
-    canActivate: [GuestGuard],
-  },
-  {
-    path: 'profile',
-    component: ProfileComponent,
-    title: 'Profile Page',
-    canActivate: [AuthGuard],
-  },
-  {
-    path: 'login',
-    component: LoginComponent,
-    title: 'Login Page',
-    canActivate: [GuestGuard],
-  },
-  {
-    path: 'auth-redirect',
-    component: AuthRedirectComponent,
-    title: 'Auth Redirect Page',
-  },
-  {
-    path: 'login-with-magic-link',
-    component: LoginWithMagicLinkComponent,
-    title: 'Login with Magic Link Page',
-    canActivate: [GuestGuard],
-  },
-  {
-    path: 'register',
-    component: RegisterComponent,
-    title: 'Register Page',
-    canActivate: [GuestGuard],
-  },
-  {
-    path: '**',
-    redirectTo: '/',
-  },
-];
-
-@NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule],
-})
-export class AppRoutingModule {}
-```
 
 
 ## Conclusion
