@@ -1,7 +1,6 @@
-# How to Authenticate Email and Password Using Angular & Altogic
-
+# Email & Password Based Authentication Using Angular & Altogic
 ## Introduction
-[Altogic](https://www.altogic.com) is a Backend as a Service (BaaS) platform and provides a variety of services in modern web and mobile development. Most modern applications using React or other libraries/frameworks require knowing the identity of a user. And this necessity allows an app to securely save user data and session in the cloud and provide more personalized functionalities and views to users.
+[Altogic](https://www.altogic.com) is a Backend as a Service (BaaS) platform and provides a variety of services in modern web and mobile development. Most modern applications using Angular or other libraries/frameworks require knowing the identity of a user. And this necessity allows an app to securely save user data and session in the cloud and provide more personalized functionalities and views to users.
 
 Altogic has an authentication service that integrates and implements well in JAMstack apps. It has a ready-to-use [Javascript client library](https://www.npmjs.com/package/altogic), and it supports many authentication providers such as email/password, phone number, magic link, and OAuth providers like Google, Facebook, Twitter, Github, etc.,
 
@@ -50,7 +49,7 @@ Click + New app and follow the instructions;
 
 ![Create App](github/2-create-app.png)
 
-Then click Next and select Basic template. This template creates a default user data model for your app which is required by **Altogic Client Library** to store user data and manage authentication. You can add additional user fields to this data model (e.g., name, surname, gender, birthdate) and when calling the `signUpWithEmail` method of the client library you can pass these additional data.
+Then, click Next and select Basic template. This template creates a default user data model for your app which is required by [**Altogic Client Library**](https://www.altogic.com/client/) to store user data and manage authentication. You can add additional user fields to this data model (e.g., name, surname, gender, birthdate) and when calling the `signUpWithEmail` method of the client library you can pass these additional data.
 ![Choose Template](github/3-choose-template.png)
 > **Tip**: If you do not select the basic template, instead selected the blank app template the user data model will not be created for your app. In order to use the Altogic Client Library's authentication methods you need a user data model to store the user data. You can easily create a new data model manually and from the App Settings > Authentication mark this new data model as your user data model.
 
@@ -66,7 +65,7 @@ Once the user created successfully, our Angular app will route the user to the V
 
 > If you want, you can deactivate or customize the mail verification from App Settings -> Authentication in Logic Designer.
 
-![Mail Verification](github/15-mail.png) 
+![Mail Verification](github/mail.png) 
 
 ## Install the Angular CLI
 You use the Angular CLI to create projects, generate application.
@@ -95,7 +94,7 @@ cd altogic-auth-angular
 
 Our backend and frontend is now ready and running on the server. ✨
 
-Now, we can install the Altogic client library to our React app to connect our frontend with the backend.
+Now, we can install the Altogic client library to our Angular app to connect our frontend with the backend.
 
 ```bash
 # using npm
@@ -114,17 +113,16 @@ import { createClient } from 'altogic';
 
 const ENV_URL = ''; // replace with your envUrl
 const CLIENT_KEY = ''; // replace with your clientKey
-const API_KEY = ''; // replace with your apiKey
 
 const altogic = createClient(ENV_URL, CLIENT_KEY, {
-	apiKey: API_KEY,
 	signInRedirect: '/login',
 });
 
 export default altogic;
 ```
-> Replace ENV_URL, CLIENT_KEY and API_KEY which is shown in the **Home** view of [Altogic Designer](https://designer.altogic.com/).
+> Replace ENV_URL and CLIENT_KEY which is shown in the **Home** view of [Altogic Designer](https://designer.altogic.com/).
 
+> `signInRedirect` is the sign in page URL to redirect the user when user's session becomes invalid. Altogic client library observes the responses of the requests made to your app backend. If it detects a response with an error code of missing or invalid session token, it can redirect the users to this signin url.
 
 
 ## Generate an Auth service
@@ -134,7 +132,7 @@ Run the following command to generate a service:
 ```bash
 ng generate service shared/auth
 ```
-In the `auth.service.ts` file, we will add the following code block to handle the authentication process.
+In the `auth.service.ts` file, we will add the following code block to store the user data and handle the authentication process.
 
 ```ts
 import { Injectable } from '@angular/core';
@@ -177,7 +175,7 @@ Run the following command to generate a guards:
 ```bash
 ng generate guard shared/auth && ng generate guard shared/guest
 ``` 
-> then you should select the `CanActivate` option for each by pressing enter.
+then, you should select the `CanActivate` option for each by pressing enter.
 
 ## Define auth guard
 In this guard, we will check if the user is logged in or not. If the user is logged in, we will return true, otherwise, we will redirect the user to the login page.
@@ -341,7 +339,7 @@ Open `home.component.html` and paste below code block:
 
 Open `login.component.ts` and paste below code block to define.
 
-In this component, we will use the `signInWithEmail` method of the *Altogic* client library to sign in the user.
+In this component, we will use the `signInWithEmail()` method of the *Altogic* client library to sign in the user.
 
 ```ts
 import { Component, OnInit } from '@angular/core';
@@ -416,7 +414,9 @@ then open your `login.component.html` and paste below code block:
 
 Open `login-with-magic-link.component.ts` and paste below code block to define.
 
-In this component, we will use the `altogic.auth.sendMagicLinkEmail()` method of the **Altogic** client library to send the magic link to the user's email.
+In this page, we will show a form to **log in with Magic Link** with only email. We will use Altogic's `altogic.auth.sendMagicLinkEmail()` function to sending magic link to user's email.
+
+When the user clicks on the magic link in the email, Altogic verifies the validity of the magic link and, if successful, redirects the user to the redirect URL specified in your app authentication settings with an access token in a query string parameter named `access_token` The magic link flows in a similar way to the sign-up process. We use the `getAuthGrant()` method to create a new session and associated `sessionToken`.
 
 ```ts
 import { Component, OnInit } from '@angular/core';
@@ -497,6 +497,11 @@ then open your `login-with-magic-link.component.html` and paste below code block
 ### Define our register page component
 
 Open `register.component.ts` and paste below code block to define.
+
+We will save session and user info to state if the api returns session. Then, user will be redirected to profile page.
+
+If `signUpWithEmail` does not return session, it means user need to confirm email, so we will show the success message.
+> **Note:** `signUpWithEmail` function can accept optional  third parameter data to save the user's profile. We will save the user's name to the database in this example.
 
 ```ts
 import { Component, OnInit } from '@angular/core';
@@ -588,7 +593,7 @@ then open your `register.component.html` and paste below code block:
 
 Open `profile.component.ts` and paste below code block to define.
 
-In this component, we will use `AuthService` to logout the current user.
+In this page, we will show the user's profile, and we will use `AuthService` to logout the current user.
 
 ```ts
 import { Component, OnInit } from '@angular/core';
@@ -630,7 +635,7 @@ then open your `profile.component.html` and paste below code block:
 
 Open `auth-redirect.component.ts` and paste below code block to define.
 
-In this page, we will use **Altogic's** `altogic.auth.getAuthGrant()` function to log in with the handled token from the URL.
+In this page we use the `getAuthGrant()` method to create a new session and associated `sessionToken` for verify email or sign in with magic link.
 
 ```ts
 import { Component, OnInit } from '@angular/core';
@@ -771,48 +776,67 @@ then open your `user-info.component.html` and paste below code block:
 
 Open `avatar.component.ts` and paste below code block to define:
 
-For convenience, we will be using the user's name as the name of the uploaded file and upload the profile picture to the root directory of our app storage. If needed you can create different buckets for each user or a generic bucket to store all provided photos of users. The Altogic Client Library has all the methods to manage buckets and files.
+For convenience, we will be using the user's `_id` as the name of the uploaded file and upload the profile picture to the root directory of our app storage. If needed you can create different buckets for each user or a generic bucket to store all provided photos of users. The Altogic Client Library has all the methods to manage buckets and files.
 
 ```ts
-import { Component, HostBinding, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../shared/auth.service';
 import altogic from '../../libs/altogic';
-import { FormControl, Validators } from '@angular/forms';
 import { User } from 'altogic';
 
 @Component({
-  selector: 'app-user-info',
-  templateUrl: './user-info.component.html',
+  selector: 'app-avatar',
+  templateUrl: './avatar.component.html',
 })
-export class UserInfoComponent implements OnInit {
-  errors: null | string = null;
-  changeMode = false;
+export class AvatarComponent implements OnInit {
   loading = false;
-  name = new FormControl(this.getUserName(), [Validators.required]);
-
+  errors = null;
   constructor(private authService: AuthService) {}
-  @HostBinding('class.w-full')
+
   getUserName() {
     return this.authService.user?.name;
   }
 
-  async saveName() {
+  getUserPhoto() {
+    return (
+      this.authService.user?.profilePicture ||
+      `https://ui-avatars.com/api/?name=${this.getUserName()}&background=0D8ABC&color=fff`
+    );
+  }
+
+  async onFileChange(event: any) {
+    const [file] = event.target.files;
+    event.target.value = null;
+    if (!file) return;
+
     this.loading = true;
     this.errors = null;
 
-    const { data, errors: apiErrors } = await altogic.db
-      .model('users')
-      .object(this.authService.user?._id)
-      .update({ name: this.name.value });
-
-    if (apiErrors) {
-      this.errors = apiErrors.items[0].message;
-    } else {
-      this.authService.setUser(data as User);
+    try {
+      const profilePicture = await this.uploadAvatar(file);
+      const user = await this.updateUser({ profilePicture });
+      this.authService.setUser(user);
+    } catch (error: any) {
+      this.errors = error.message;
+    } finally {
+      this.loading = false;
     }
-
-    this.loading = false;
-    this.changeMode = false;
+  }
+  async uploadAvatar(file: File) {
+    // @ts-ignore
+    const { data, errors } = await altogic.storage.bucket('root').upload(`user_${this.authService.user?._id}`, file);
+    if (errors) {
+      throw new Error("Couldn't upload avatar, please try again later");
+    }
+    // @ts-ignore
+    return data.publicPath;
+  }
+  async updateUser(data: Partial<User>) {
+    const { data: user, errors } = await altogic.db.model('users').object(this.authService.user?._id).update(data);
+    if (errors) {
+      throw new Error("Couldn't update user, please try again later");
+    }
+    return user as User;
   }
   ngOnInit(): void {}
 }

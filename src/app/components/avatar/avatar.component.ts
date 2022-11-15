@@ -43,7 +43,7 @@ export class AvatarComponent implements OnInit {
 	}
 	async uploadAvatar(file: File) {
 		// @ts-ignore
-		const { data, errors } = await altogic.storage.bucket('root').upload(this.getUserName(), file);
+		const { data, errors } = await altogic.storage.bucket('root').upload(`user_${this.authService.user?._id}`, file);
 		if (errors) {
 			throw new Error("Couldn't upload avatar, please try again later");
 		}
