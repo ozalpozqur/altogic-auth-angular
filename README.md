@@ -82,12 +82,11 @@ To create a new Angular app, open a terminal window and run the following comman
 ```bash
 ng new altogic-auth-angular
 ```
-I showed you which options to choose in the image I will give you below. You can choose the same options as I did.
 ![Mail Verification](github/terminal.png) 
 
-#### Navigate to folder
+#### Open altogic-auth-angular folder in Visual Studio Code:
 ```bash
-cd altogic-auth-angular
+code altogic-auth-angular
 ```
 
 ## Integrating with Altogic
